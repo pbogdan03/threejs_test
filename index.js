@@ -5,6 +5,8 @@
     windowHalfX = window.innerWidth / 2,
 	  windowHalfY = window.innerHeight / 2,
     resolution = new THREE.Vector2(window.innerWidth, window.innerHeight),
+    time,
+    theta = 0,
 		camera, scene, renderer, material, composer;
 
   init();
@@ -12,6 +14,8 @@
   addEvents();
 
   function init() {
+    time = Date.now();
+
     var i, container;
     container = document.createElement( 'div' );
     el.appendChild( container );
@@ -31,19 +35,25 @@
 
     for(var i = -10, j = 10; i < j; i++) {
       var position = new THREE.Vector3(0, i * 10, 0);
-      createLine(position);
+      //createLine(position);
     }
 
     document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
-    for(var i = 0; i < scene.children.length; i++) {
-      var points = scene.children[i].geometry.attributes.position.array;
-      for(var j = 0; j < points.length; j++) {
-        if(j % 3 === 0) { //x
-          points[j + 1] += 100;
-        }
-      }
-    }
+    // for(var i = 0; i < scene.children.length; i++) {
+    //   var points = scene.children[i].geometry.attributes.position.array;
+    //   for(var j = 0; j < points.length; j++) {
+    //     if(j % 3 === 0) { //x
+    //       points[j + 1] += 100;
+    //     }
+    //   }
+    // }
+
+    // var points = scene.children[0].geometry.attributes.position;
+    //
+    // console.log(scene.children[0].geometry.attributes.position);
+
+    noise.seed(Math.random());
   }
 
   function animate() {
@@ -51,18 +61,48 @@
     render();
   }
 
+  var test = false;
+
   function render() {
-    var time = Date.now() * 0.005;
+    theta = Math.round((Date.now() - time) / 100);
+    // console.log(theta);
 
     camera.position.x += ( mouseX - camera.position.x ) * .05;
     camera.position.y += ( - mouseY + 200 - camera.position.y ) * .05;
     camera.lookAt( scene.position );
-    var time = Date.now() * 0.0005;
-    for ( var i = 0; i < scene.children.length; i ++ ) {
-      var object = scene.children[ i ];
-      if ( object instanceof THREE.Line ) object.rotation.y = time * ( i % 2 ? 1 : -1 );
+
+    clearScene();
+
+    for (var i = 0; i < 15; i++) {
+      createLine(new THREE.Vector3(0, i * 10, 0), theta);
     }
+
+    // for ( var i = 0; i < scene.children.length; i ++ ) {
+    //   var object = scene.children[ i ];
+    //   if ( object instanceof THREE.Mesh ) {
+    //     var points = object.geometry.attributes.position.array;
+    //
+    //     for(var j = 0; j < points.length; j++) {
+    //       if(j % 3 === 0) { //x
+    //         // console.log(points[j + 1]);
+    //         object.geometry.attributes.position.dynamic = true;
+    //         points[j + 1] += theta;
+    //         object.geometry.verticesNeedUpdate = true;
+    //         // console.log(points[j + 1]);
+    //       }
+    //     }
+    //
+    //   };
+    // }
     renderer.render(scene, camera);
+  }
+
+  function clearScene() {
+    for(var i = scene.children.length - 1; i >= 0; i--) {
+      if(scene.children[i] instanceof THREE.Mesh) {
+        scene.remove(scene.children[i]);
+      }
+    }
   }
 
   function onDocumentMouseMove( event ) {
@@ -70,10 +110,14 @@
     mouseY = event.clientY - windowHalfY;
   }
 
-  function createLine(position) {
+  function createLine(position, variation) {
     var geometry = new THREE.Geometry();
 
-    var curve = new THREE.SplineCurve(createPoints(-100, 100, 10));
+    if(variation) {
+      var curve = new THREE.SplineCurve(createPoints(-500, 500, 10, variation));
+    } else {
+      var curve = new THREE.SplineCurve(createPoints(-500, 500, 10));
+    }
 
     var path = new THREE.Path( curve.getPoints( 50 ) );
     geometry = path.createPointsGeometry( 50 );
@@ -98,14 +142,20 @@
     meshline.position.y = position.y;
     meshline.position.z = position.z;
 
+    meshline.name = 'line';
+
     scene.add( meshline );
   }
 
-  function createPoints(min, max, step) {
+  function createPoints(min, max, step, variation) {
     var pointsArr = [];
 
     for(var i = min, j = max; i<=j; i+=step) {
-      pointsArr.push(new THREE.Vector3(i, 0, 0));
+      if(variation) {
+        pointsArr.push(new THREE.Vector3(i, noise.simplex2(i + 1000, i + 1000) * 10, 0));
+      } else {
+        pointsArr.push(new THREE.Vector3(i, 0, 0));
+      }
     }
 
     return pointsArr;
