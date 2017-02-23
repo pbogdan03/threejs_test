@@ -16,7 +16,10 @@
       time = Date.now(),
       camera, renderer,
       gui, verticalMinCtrl, verticalMaxCtrl, horizontalMinCtrl, horizontalMaxCtrl, stepCtrl,
-      i, j, k, l, m, n, o, p;
+      i, j, k, l, m, n, o, p,
+      noiseIntensity = 500,
+      noiseFreq = 2, // lower is more loose
+      noiseUpdate = 500; // lower is faster
 
   var settings = {
     verticalMin: -15,
@@ -69,7 +72,7 @@
     // Setup noise seed
     noise.seed(Math.random());
 
-    for (i = -50; i < 50; i++) {
+    for (i = verticalMin; i < verticalMax; i++) {
       createLine(new THREE.Vector3(0, i * 10, 0), i + 1, theta);
     }
     console.log(scene);
@@ -115,11 +118,9 @@
 
       for(var j = 0; j < vertices.length; j++) {
         if(scene.children[index - 1]) {
-          vertices[j].y = noise.perlin2((scene.children[index - 1].geometry.vertices[j].x / 500 + theta / 500) * 10, index / 10 + theta / 500) * 10;
-          vertices[j].z = noise.perlin2((scene.children[index - 1].geometry.vertices[j].x / 500 + theta / 500) * 10, index / 10 + theta / 500) * 10;
+          vertices[j].z = noise.perlin2((scene.children[index - 1].geometry.vertices[j].x / horizontalMax + theta / noiseUpdate) * noiseFreq, index / (10 * noiseFreq) + theta / noiseUpdate) * noiseIntensity;
         } else {
-          vertices[j].y = noise.perlin2((scene.children[index].geometry.vertices[j].x / 500 + theta / 500) * 10, index / 10 + theta / 500) * 10;
-          vertices[j].z = noise.perlin2((scene.children[index].geometry.vertices[j].x / 500 + theta / 500) * 10, index / 10 + theta / 500) * 10;
+          vertices[j].z = noise.perlin2((scene.children[index].geometry.vertices[j].x / horizontalMax + theta / noiseUpdate) * noiseFreq, index / (10 * noiseFreq) + theta / noiseUpdate) * noiseIntensity;
         }
       }
 
@@ -232,8 +233,8 @@
   function createPoints(index) {
     var pointsArr = [];
 
-    for(l = -500; l<=500; l+=10) {
-      pointsArr.push(new THREE.Vector3(l, noise.perlin2(l / 500 * 10, index / 10) * 10, noise.perlin2(l / 500 * 10, index / 10) * 10));
+    for(l = horizontalMin; l<=horizontalMax; l+=10) {
+      pointsArr.push(new THREE.Vector3(l, 0, noise.perlin2(l / horizontalMax * noiseFreq, index / (10 * noiseFreq)) * noiseIntensity));
     }
 
     return pointsArr;
