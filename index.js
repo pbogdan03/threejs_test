@@ -62,9 +62,11 @@
   }
 
   var test = false;
+  var iterate = 0;
 
   function render() {
     theta = Math.round((Date.now() - time) / 100);
+
     // console.log(theta);
 
     camera.position.x += ( mouseX - camera.position.x ) * .05;
@@ -74,8 +76,14 @@
     clearScene();
 
     for (var i = 0; i < 15; i++) {
-      createLine(new THREE.Vector3(0, i * 10, 0), theta);
+      createLine(new THREE.Vector3(0, i * 10, 0), i, theta);
     }
+    //
+    // if(theta % 20 === 0) {
+    //   console.log('iterate: ', iterate);
+    //   console.log('noise: ', noise.simplex2(iterate / 100, iterate / 100));
+    //   iterate++;
+    // }
 
     // for ( var i = 0; i < scene.children.length; i ++ ) {
     //   var object = scene.children[ i ];
@@ -110,17 +118,21 @@
     mouseY = event.clientY - windowHalfY;
   }
 
-  function createLine(position, variation) {
+  function createLine(position, index, variation) {
     var geometry = new THREE.Geometry();
+    var index, pointPos;
 
-    if(variation) {
-      var curve = new THREE.SplineCurve(createPoints(-500, 500, 10, variation));
-    } else {
-      var curve = new THREE.SplineCurve(createPoints(-500, 500, 10));
+    var points = createPoints(-500, 500, 10, index, variation);
+    var curve = new THREE.CatmullRomCurve3(points);
+
+    var n_sub = 6;
+
+    for(var i = 0; i < points.length * n_sub; i++) {
+      index = i / (points.length * n_sub);
+      pointPos = curve.getPoint(index);
+
+      geometry.vertices[i] = new THREE.Vector3(pointPos.x, pointPos.y, pointPos.z)
     }
-
-    var path = new THREE.Path( curve.getPoints( 50 ) );
-    geometry = path.createPointsGeometry( 50 );
 
     var line = new MeshLine();
     line.setGeometry(geometry);
@@ -147,12 +159,12 @@
     scene.add( meshline );
   }
 
-  function createPoints(min, max, step, variation) {
+  function createPoints(min, max, step, index, variation) {
     var pointsArr = [];
 
     for(var i = min, j = max; i<=j; i+=step) {
       if(variation) {
-        pointsArr.push(new THREE.Vector3(i, noise.simplex2(i + 1000, i + 1000) * 10, 0));
+        pointsArr.push(new THREE.Vector3(i, noise.perlin2(i / max * 10, index / 10) * 10, 0));
       } else {
         pointsArr.push(new THREE.Vector3(i, 0, 0));
       }
