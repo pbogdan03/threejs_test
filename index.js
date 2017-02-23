@@ -69,20 +69,10 @@
     // Setup noise seed
     noise.seed(Math.random());
 
-    for (i = 0; i < 15; i++) {
+    for (i = -50; i < 50; i++) {
       createLine(new THREE.Vector3(0, i * 10, 0), i + 1, theta);
     }
-
-    console.log(scene.children[0].geometry.vertices);
-    var firstLineVertices = scene.children[0].geometry.vertices;
-
-    setTimeout(function() {
-      for(var i = 0; i < firstLineVertices.length; i++) {
-        firstLineVertices[i].y = noise.perlin2(firstLineVertices[i].y / 500 * 10, 1 / 10) * 10;
-      }
-      console.log(scene.children[0].geometry);
-      scene.children[0].geometry.verticesNeedUpdate = true;
-    }, 2000);
+    console.log(scene);
 
     // addGUI();
     animate();
@@ -119,11 +109,23 @@
     //   createLine(new THREE.Vector3(0, i * 10, 0), i, theta);
     // }
 
+    for(var i = 0; i < scene.children.length; i++) {
+      var vertices = scene.children[i].geometry.vertices;
+      var index = i;
 
+      for(var j = 0; j < vertices.length; j++) {
+        if(scene.children[index - 1]) {
+          vertices[j].y = noise.perlin2((scene.children[index - 1].geometry.vertices[j].x / 500 + theta / 500) * 10, index / 10 + theta / 500) * 10;
+          vertices[j].z = noise.perlin2((scene.children[index - 1].geometry.vertices[j].x / 500 + theta / 500) * 10, index / 10 + theta / 500) * 10;
+        } else {
+          vertices[j].y = noise.perlin2((scene.children[index].geometry.vertices[j].x / 500 + theta / 500) * 10, index / 10 + theta / 500) * 10;
+          vertices[j].z = noise.perlin2((scene.children[index].geometry.vertices[j].x / 500 + theta / 500) * 10, index / 10 + theta / 500) * 10;
+        }
+      }
 
-    if(theta === 10) {
-
+      scene.children[i].geometry.verticesNeedUpdate = true;
     }
+
     //
     // if(theta % 20 === 0) {
     //   console.log('iterate: ', iterate);
@@ -231,7 +233,7 @@
     var pointsArr = [];
 
     for(l = -500; l<=500; l+=10) {
-      pointsArr.push(new THREE.Vector3(l, noise.perlin2(l / 500 * 10, index / 10) * 10, 0));
+      pointsArr.push(new THREE.Vector3(l, noise.perlin2(l / 500 * 10, index / 10) * 10, noise.perlin2(l / 500 * 10, index / 10) * 10));
     }
 
     return pointsArr;
