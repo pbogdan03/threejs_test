@@ -69,6 +69,21 @@
     // Setup noise seed
     noise.seed(Math.random());
 
+    for (i = 0; i < 15; i++) {
+      createLine(new THREE.Vector3(0, i * 10, 0), i + 1, theta);
+    }
+
+    console.log(scene.children[0].geometry.vertices);
+    var firstLineVertices = scene.children[0].geometry.vertices;
+
+    setTimeout(function() {
+      for(var i = 0; i < firstLineVertices.length; i++) {
+        firstLineVertices[i].y = noise.perlin2(firstLineVertices[i].y / 500 * 10, 1 / 10) * 10;
+      }
+      console.log(scene.children[0].geometry);
+      scene.children[0].geometry.verticesNeedUpdate = true;
+    }, 2000);
+
     // addGUI();
     animate();
     addEvents();
@@ -98,11 +113,13 @@
     camera.lookAt( scene.position );
 
     // Clear this.scene on every render
-    clearScene();
+    // clearScene();
     // Recreate lines in new positions
-    for (i = 0; i < 15; i++) {
-      createLine(new THREE.Vector3(0, i * 10, 0), i, theta);
-    }
+    // for (i = 0; i < 15; i++) {
+    //   createLine(new THREE.Vector3(0, i * 10, 0), i, theta);
+    // }
+
+
 
     if(theta === 10) {
 
